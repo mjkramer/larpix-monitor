@@ -11,6 +11,8 @@ from larpix.format.pacman_msg_format import parse
 from larpix import PacketCollection
 
 class FileParser(object):
+    max_read = 256000
+
     def __init__(self, max_msgs, clean_up_interval):
         self.max_msgs = max_msgs
         self.clean_up_interval = clean_up_interval
@@ -36,13 +38,26 @@ class FileParser(object):
 
     def _load_raw_hdf5(self, filename):
         length = rh5.len_rawfile(filename)
-        end = min(length, self.max_msgs+self._curr_index[filename])
-        rd = rh5.from_rawfile(filename, start=self._curr_index[filename], end=end)
-        pkts = list()
-        for io_group,msg in zip(rd['msg_headers']['io_groups'], rd['msgs']):
-            pkts.extend(parse(msg, io_group=io_group))
+
+        start_idx = self._curr_index[filename]
+        end_idx = min(length, self.max_msgs+self._curr_index[filename]) if self.max_msgs > 0 else length
+        for start in range(start_idx, end_idx, self.max_read):
+            end = min(start+self.max_read, end_idx)
+
+            rd = rh5.from_rawfile(filename, start=start, end=end)
+
+            pkts = list()
+            for io_group,msg in zip(rd['msg_headers']['io_groups'], rd['msgs']):
+                pkts.extend(parse(msg, io_group=io_group))
+            h5.to_file(self._temp_filename(filename), pkts)
+
+            self._curr_index[filename] = end
+
+            if start > start_idx:
+                print('\tloaded {}/{}...'.format(end-start_idx,end_idx-start_idx), end='\r')
+
         self._curr_index[filename] = length
-        h5.to_file(self._temp_filename(filename), pkts)
+
         return h5py.File(self._temp_filename(filename), 'r')
 
     def _temp_filename(self, filename):
