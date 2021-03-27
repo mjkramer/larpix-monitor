@@ -76,3 +76,12 @@ To get you started, here's an example bare-bones template::
                 # do stuff to make new plot
                 fig = plt.figure()
             return fig
+
+# Other notes
+
+## Pixel map geometry
+
+The pixel map plots (``PixelMap_X_X``) require a geometry file to look up each
+pixel position. The path to a ``larpix-geometry`` yaml file should be specified
+via the environment variable ``PIXEL_GEOMETRY_PATH``. Otherwise, a default
+path of ``./layout-2.4.0.yaml`` will be used.
