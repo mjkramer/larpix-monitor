@@ -13,7 +13,8 @@ from larpix import PacketCollection
 class FileParser(object):
     max_read = 256000
 
-    def __init__(self, max_msgs, clean_up_interval):
+    def __init__(self, sampling, max_msgs, clean_up_interval):
+        self.sampling = sampling
         self.max_msgs = max_msgs
         self.clean_up_interval = clean_up_interval
 
@@ -56,7 +57,8 @@ class FileParser(object):
             if start > start_idx:
                 print('\tloaded {}/{}...'.format(end-start_idx,end_idx-start_idx), end='\r')
 
-        self._curr_index[filename] = length
+        if self.sampling:
+            self._curr_index[filename] = length
 
         return h5py.File(self._temp_filename(filename), 'r')
 

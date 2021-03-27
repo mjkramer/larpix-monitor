@@ -12,16 +12,17 @@ from monitor.plotting_functions import available_plots
 def main(**kwargs):
 
     fw = FileWatcher(
-        directory=kwargs.get('in_directory','./'),
-        interval=kwargs.get('interval')
+        directory = kwargs.get('in_directory','./'),
+        interval = kwargs.get('interval')
         )
     fp = FileParser(
-        max_msgs=kwargs.get('max_msgs'),
-        clean_up_interval=kwargs.get('flush_interval')
+        sampling = not kwargs.get('sampling_off'),
+        max_msgs = kwargs.get('max_msgs'),
+        clean_up_interval = kwargs.get('flush_interval')
         )
     p  = Plotter(
-        plots=kwargs.get('plots'),
-        clean_up_interval=kwargs.get('flush_interval')
+        plots = kwargs.get('plots'),
+        clean_up_interval = kwargs.get('flush_interval')
         )
 
     while True:
@@ -66,6 +67,9 @@ if __name__ == '__main__':
         ''')
     parser.add_argument('--max_msgs', type=int, required=False, default=100000, help='''
         Maximum number of new messages to fetch from file (default=%(default)s), -1 for all messages
+        ''')
+    parser.add_argument('--sampling_off', action='store_true', required=False, default=False, help='''
+        Disable skipping subsets of datafile
         ''')
     parser.add_argument('--once', type=str, required=False, help='''
         Run once on passed file and then exit, otherwise continously monitor for new data
