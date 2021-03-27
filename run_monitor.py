@@ -24,12 +24,12 @@ def main(**kwargs):
         )
 
     while True:
+        print(datetime.datetime.now(), end='\r')
+
         if kwargs.get('once',None):
             datafiles = [kwargs['once']]
         else:
             datafiles = fw()
-            print(datetime.datetime.now(), end='\r')
-
         if not datafiles: continue
         print()
         print('\tnew data in',datafiles)

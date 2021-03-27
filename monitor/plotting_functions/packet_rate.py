@@ -81,7 +81,7 @@ class PacketRate(object):
             # do stuff to make new plot
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',figsize=(10,12))
 
-            axes[0].plot(unixtimes[:-1], packet_count,
+            axes[0].plot(unixtimes[:-1], packet_count, '.-',
                 alpha=0.5, label='total', color='k', zorder=np.inf)
             for packet_type in range(8):
                 axes[0].plot(unixtimes[:-1], packet_type_count[packet_type], '.-',
