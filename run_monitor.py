@@ -31,13 +31,13 @@ def main(**kwargs):
             print(datetime.datetime.now(), end='\r')
 
         if not datafiles: continue
-        print('',end='\n')
+        print()
         print('\tnew data in',datafiles)
 
-        datafile_packets = fp(datafiles)
-        print('\tgot',sum(map(lambda fh: len(fh['packets']),datafile_packets)),'packets')
+        datafile_fh = fp(datafiles)
+        print('\tgot',sum(map(lambda fh: len(fh['packets']),datafile_fh)),'packets')
 
-        datafile_figs = p(zip(datafiles, datafile_packets))
+        datafile_figs = p(zip(datafiles, datafile_fh))
         print('\tgenerated',sum(map(len,datafile_figs)),'plots')
 
         for filename,figs in zip(datafiles,datafile_figs):

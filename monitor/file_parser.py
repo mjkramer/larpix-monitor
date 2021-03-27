@@ -46,8 +46,11 @@ class FileParser(object):
         return '{}.dqm.h5'.format(os.path.basename(filename[:-3]))
 
     def _clean_up(self):
+        to_clean = []
         for filename,last in self._last_updated.items():
             if time.time() > last + self.clean_up_interval:
-                del self._last_updated[filename]
-                del self._curr_index[filename]
+                to_clean.append(filename)
+        for filename in to_clean:
+            del self._last_updated[filename]
+            del self._curr_index[filename]
 
