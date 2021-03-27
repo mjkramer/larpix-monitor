@@ -20,7 +20,7 @@ class PacketRate(object):
         message_groups = np.split(fh['packets']['timestamp'], timestamp_idcs)
         if timestamp_idcs[0] != 0:
             message_groups[0][0] = message_groups[1][0]
-        unixtime = np.array([grp[0] for grp in message_groups for _ in range(0,len(grp))])
+        unixtime = np.concatenate([np.full(len(grp), grp[0]) for grp in message_groups if len(grp)], axis=0)
         unixtimes = np.arange(min(unixtime), max(unixtime) + 1)
 
         packet_type_mask = [fh['packets']['packet_type'] == packet_type for packet_type in range(8)]
@@ -57,7 +57,7 @@ class PacketRate(object):
                     , axis=0))
                 ax0_lines[packet_type].set_ydata(np.append(
                     ax0_lines[packet_type].get_ydata(),
-                    packet_type_count[packet_type]
+                    packet_type_count[packet_type-1]
                     , axis=0))
 
                 ax1_lines[packet_type-1].set_xdata(np.append(
@@ -70,13 +70,18 @@ class PacketRate(object):
                     , axis=0))
 
             ax2_lines[0].set_xdata(np.append(
-                    ax1_lines[0].get_xdata(),
+                    ax2_lines[0].get_xdata(),
                     unixtimes[:-1]
                     , axis=0))
             ax2_lines[0].set_ydata(np.append(
-                ax1_lines[0].get_ydata(),
+                ax2_lines[0].get_ydata(),
                 parity_error_count / np.clip(larpix_packet_count, 1, np.inf)
                 , axis=0))
+
+            for ax in axes:
+                ax.relim()
+                ax.autoscale()
+            plt.draw()
         else:
             # do stuff to make new plot
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',figsize=(10,12))

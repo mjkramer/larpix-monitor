@@ -44,41 +44,45 @@ class FIFOFlags(object):
 
             ax0_lines = axes[0].get_lines()
             ax1_lines = axes[1].get_lines()
-            for full in range(0,3*2,2):
-                ax0_lines[full].set_xdata(np.append(
-                    ax0_lines[full].get_xdata(),
+            for full in range(0,3):
+                ax0_lines[full*2].set_xdata(np.append(
+                    ax0_lines[full*2].get_xdata(),
                     unixtimes[:-1]
                     ,axis=0))
-                ax0_lines[full].set_ydata(np.append(
-                    ax0_lines[full].get_ydata(),
+                ax0_lines[full*2].set_ydata(np.append(
+                    ax0_lines[full*2].get_ydata(),
                     local_fifo_count[full]
                     ,axis=0))
-                ax0_lines[full+1].set_xdata(np.append(
-                    ax0_lines[full+1].get_xdata(),
+                ax0_lines[full*2+1].set_xdata(np.append(
+                    ax0_lines[full*2+1].get_xdata(),
                     unixtimes[:-1]
                     ,axis=0))
-                ax0_lines[full+1].set_ydata(np.append(
-                    ax0_lines[full+1].get_ydata(),
+                ax0_lines[full*2+1].set_ydata(np.append(
+                    ax0_lines[full*2+1].get_ydata(),
                     shared_fifo_count[full]
                     ,axis=0))
 
-                ax1_lines[full].set_xdata(np.append(
-                    ax1_lines[full].get_xdata(),
+                ax1_lines[full*2].set_xdata(np.append(
+                    ax1_lines[full*2].get_xdata(),
                     unixtimes[:-1]
                     ,axis=0))
-                ax1_lines[full].set_ydata(np.append(
-                    ax1_lines[full].get_ydata(),
+                ax1_lines[full*2].set_ydata(np.append(
+                    ax1_lines[full*2].get_ydata(),
                     local_fifo_count[full] / packet_count
                     ,axis=0))
-                ax1_lines[full+1].set_xdata(np.append(
-                    ax1_lines[full+1].get_xdata(),
+                ax1_lines[full*2+1].set_xdata(np.append(
+                    ax1_lines[full*2+1].get_xdata(),
                     unixtimes[:-1]
                     ,axis=0))
-                ax1_lines[full+1].set_ydata(np.append(
-                    ax1_lines[full+1].get_ydata(),
+                ax1_lines[full*2+1].set_ydata(np.append(
+                    ax1_lines[full*2+1].get_ydata(),
                     shared_fifo_count[full] / packet_count
                     ,axis=0))
 
+            for ax in axes:
+                ax.relim()
+                ax.autoscale()
+            plt.draw()
         else:
             # do stuff to make new plot
             fig,axes = plt.subplots(2,1,dpi=100,sharex='all',figsize=(10,8))
