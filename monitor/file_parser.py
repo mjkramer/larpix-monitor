@@ -3,6 +3,7 @@ import warnings
 from collections import defaultdict
 import os
 import h5py
+import numpy as np
 
 import larpix.format.rawhdf5format as rh5
 import larpix.format.hdf5format as h5
@@ -17,21 +18,20 @@ class FileParser(object):
         self._last_updated = defaultdict(lambda : time.time())
 
     def __call__(self, datafiles):
-        datafile_packets = list()
+        datafile_fh = list()
         for file in datafiles:
             try:
-                if os.path.exists(self._temp_filename(file)):
-                    os.remove(self._temp_filename(file))
-                datafile_packets.append(self._load_raw_hdf5(file))
+                self._remove_temp_file(file)
+                datafile_fh.append(self._load_raw_hdf5(file))
             except Exception as e:
                 warnings.warn('could not load {} as raw hdf5! \nError: {}'.format(file, e), RuntimeWarning)
-                datafile_packets.append(PacketCollection(list()))
+                datafile_fh.append(dict(packets=np.empty((0,))))
 
             self._last_updated[file] = time.time()
 
         self._clean_up()
 
-        return datafile_packets
+        return datafile_fh
 
     def _load_raw_hdf5(self, filename):
         rd = rh5.from_rawfile(filename, start=self._curr_index[filename])
@@ -44,6 +44,10 @@ class FileParser(object):
 
     def _temp_filename(self, filename):
         return '{}.dqm.h5'.format(os.path.basename(filename[:-3]))
+
+    def _remove_temp_file(self, filename):
+        if os.path.exists(self._temp_filename(filename)):
+            os.remove(self._temp_filename(filename))
 
     def _clean_up(self):
         to_clean = []
