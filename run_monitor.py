@@ -51,6 +51,8 @@ def main(**kwargs):
                     ))
             print('\tdone writing to',dir_name)
 
+        fp.clean_up_temp_files(datafiles)
+
         if kwargs.get('once',None):
             break
 

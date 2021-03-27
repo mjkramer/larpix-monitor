@@ -25,7 +25,6 @@ class FileParser(object):
         datafile_fh = list()
         for file in datafiles:
             try:
-                self._remove_temp_file(file)
                 datafile_fh.append(self._load_raw_hdf5(file))
             except Exception as e:
                 warnings.warn('could not load {} as raw hdf5! \nError: {}'.format(file, e), RuntimeWarning)
@@ -36,6 +35,13 @@ class FileParser(object):
         self._clean_up()
 
         return datafile_fh
+
+    def clean_up_temp_files(self, datafiles):
+        for file in datafiles:
+            try:
+                self._remove_temp_file(file)
+            except Exception as e:
+                warnings.warning('could not clear temp file for {} \nError: {}'.format(file, e), RuntimeWarning)
 
     def _load_raw_hdf5(self, filename):
         length = rh5.len_rawfile(filename)
