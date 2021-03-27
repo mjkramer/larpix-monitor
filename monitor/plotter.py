@@ -50,4 +50,5 @@ class Plotter(object):
                 to_clean.append(filename)
         for filename in to_clean:
             del self._last_updated[filename]
+            self._figs[filename].close()
             del self._figs[filename]
