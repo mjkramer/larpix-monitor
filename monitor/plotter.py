@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+import os
 
 from . import plotting_functions
 
@@ -39,7 +40,7 @@ class Plotter(object):
         return rv
 
     def _format_fig_name(self, datafile, plot_name):
-        return '{}-{}'.format(datafile[:-3], plot_name)
+        return '{}_{}'.format(os.path.basename(datafile[:-3]), plot_name)
 
     def _clean_up(self):
         for filename,last in self._last_updated.items():

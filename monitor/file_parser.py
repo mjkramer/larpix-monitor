@@ -1,13 +1,15 @@
 import time
 import warnings
 from collections import defaultdict
+import os
+import h5py
 
 import larpix.format.rawhdf5format as rh5
 import larpix.format.hdf5format as h5
 from larpix.format.pacman_msg_format import parse
 from larpix import PacketCollection
 
-class FileLoader(object):
+class FileParser(object):
     def __init__(self, clean_up_interval):
         self.clean_up_interval = clean_up_interval
 
@@ -18,6 +20,8 @@ class FileLoader(object):
         datafile_packets = list()
         for file in datafiles:
             try:
+                if os.path.exists(self._temp_filename(file)):
+                    os.remove(self._temp_filename(file))
                 datafile_packets.append(self._load_raw_hdf5(file))
             except Exception as e:
                 warnings.warn('could not load {} as raw hdf5! \nError: {}'.format(file, e), RuntimeWarning)
@@ -35,7 +39,11 @@ class FileLoader(object):
         for io_group,msg in zip(rd['msg_headers']['io_groups'], rd['msgs']):
             pkts.extend(parse(msg, io_group=io_group))
         self._curr_index[filename] += len(rd['msgs'])
-        return PacketCollection(pkts)
+        h5.to_file(self._temp_filename(filename), pkts)
+        return h5py.File(self._temp_filename(filename), 'r')
+
+    def _temp_filename(self, filename):
+        return '{}.dqm.h5'.format(os.path.basename(filename[:-3]))
 
     def _clean_up(self):
         for filename,last in self._last_updated.items():

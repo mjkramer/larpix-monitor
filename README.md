@@ -27,7 +27,7 @@ a class with the desired plot name as the class name. Then implement the
 ``packet_collection``, and ``prev_fig=None``. These are
  - ``self``: your custom plotting class instance
  - ``filename``: the filename of the file that is being plotted
- - ``packet_collection``: a ``larpix.PacketCollection`` object containing *new* packets to plot
+ - ``fh``: an ``h5py`` temporary file object containing *new* packets to plot
  - ``fig=None``: the instance of an existing ``matplotlib.pyplot.Figure`` (if it exists)
 
 The implemented ``__call__`` method should return one argument -- the ``Figure``
@@ -55,7 +55,7 @@ To get you started, here's an example bare-bones template::
     import numpy as np
 
     class TemplatePlot(object):
-        def __call__(self, filename, packet_collection, fig=None):
+        def __call__(self, filename, fh, fig=None):
             if fig is not None:
                 # do stuff to update plot
                 pass

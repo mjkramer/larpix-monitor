@@ -5,7 +5,7 @@ import os
 import datetime
 
 from monitor.file_watcher import FileWatcher
-from monitor.file_loader import FileLoader
+from monitor.file_parser import FileParser
 from monitor.plotter import Plotter
 from monitor.plotting_functions import available_plots
 
@@ -15,7 +15,7 @@ def main(**kwargs):
         directory=kwargs.get('in_directory','./'),
         interval=kwargs.get('interval')
         )
-    fl = FileLoader(
+    fp = FileParser(
         clean_up_interval=kwargs.get('flush_interval')
         )
     p  = Plotter(
@@ -31,25 +31,24 @@ def main(**kwargs):
             print(datetime.datetime.now(), end='\r')
 
         if not datafiles: continue
-        print('',end='\n\t')
-        print('new data in',datafiles, end='\n\t')
+        print('',end='\n')
+        print('\tnew data in',datafiles)
 
-        datafile_packets = fl(datafiles)
-        print('got',sum(map(len,datafile_packets)),'packets', end='\n\t')
+        datafile_packets = fp(datafiles)
+        print('\tgot',sum(map(lambda fh: len(fh['packets']),datafile_packets)),'packets')
 
         datafile_figs = p(zip(datafiles, datafile_packets))
-        print('generated',sum(map(len,datafile_figs)),'plots', end='\n\t')
+        print('\tgenerated',sum(map(len,datafile_figs)),'plots')
 
         for filename,figs in zip(datafiles,datafile_figs):
-            dir_name = os.path.join(kwargs.get('out_directory'), filename[:-3] + '_dqm')
+            dir_name = os.path.join(kwargs.get('out_directory'), os.path.basename(filename[:-3]) + '_dqm')
             for fig_name, fig in figs.items():
                 os.makedirs(dir_name, exist_ok=True)
                 fig.savefig(os.path.join(
                     dir_name, fig_name + kwargs.get('ext')
                     ))
-            print('done writing to',dir_name, end='\n\t')
+            print('\tdone writing to',dir_name)
 
-        print()
         if kwargs.get('once',None):
             break
 
@@ -65,7 +64,7 @@ if __name__ == '__main__':
         File update interval [s] (default=%(default)s)
         ''')
     parser.add_argument('--once', type=str, required=False, help='''
-        Run once and then exit, otherwise continously monitor for new data
+        Run once on passed file and then exit, otherwise continously monitor for new data
         ''')
     parser.add_argument('--flush_interval', type=float, required=False, default=1800., help='''
         Memory cleaning interval [s] (default=%(default)s)
