@@ -16,6 +16,7 @@ def main(**kwargs):
         interval=kwargs.get('interval')
         )
     fp = FileParser(
+        max_msgs=kwargs.get('max_msgs'),
         clean_up_interval=kwargs.get('flush_interval')
         )
     p  = Plotter(
@@ -62,6 +63,9 @@ if __name__ == '__main__':
         ''')
     parser.add_argument('--interval', type=float, required=False, default=30., help='''
         File update interval [s] (default=%(default)s)
+        ''')
+    parser.add_argument('--max_msgs', type=int, required=False, default=100000, help='''
+        Maximum number of new messages to fetch from file (default=%(default)s), -1 for all messages
         ''')
     parser.add_argument('--once', type=str, required=False, help='''
         Run once on passed file and then exit, otherwise continously monitor for new data

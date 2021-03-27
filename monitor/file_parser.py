@@ -11,7 +11,8 @@ from larpix.format.pacman_msg_format import parse
 from larpix import PacketCollection
 
 class FileParser(object):
-    def __init__(self, clean_up_interval):
+    def __init__(self, max_msgs, clean_up_interval):
+        self.max_msgs = max_msgs
         self.clean_up_interval = clean_up_interval
 
         self._curr_index = defaultdict(int)
@@ -34,11 +35,13 @@ class FileParser(object):
         return datafile_fh
 
     def _load_raw_hdf5(self, filename):
-        rd = rh5.from_rawfile(filename, start=self._curr_index[filename])
+        length = rh5.len_rawfile(filename)
+        end = min(length, self.max_msgs+self._curr_index[filename])
+        rd = rh5.from_rawfile(filename, start=self._curr_index[filename], end=end)
         pkts = list()
         for io_group,msg in zip(rd['msg_headers']['io_groups'], rd['msgs']):
             pkts.extend(parse(msg, io_group=io_group))
-        self._curr_index[filename] += len(rd['msgs'])
+        self._curr_index[filename] = length
         h5.to_file(self._temp_filename(filename), pkts)
         return h5py.File(self._temp_filename(filename), 'r')
 
