@@ -24,8 +24,12 @@ def main(**kwargs):
         )
 
     while True:
-        datafiles = fw()
-        print(datetime.datetime.now(), end='\r')
+        if kwargs.get('once',None):
+            datafiles = [kwargs['once']]
+        else:
+            datafiles = fw()
+            print(datetime.datetime.now(), end='\r')
+
         if not datafiles: continue
         print('',end='\n\t')
         print('new data in',datafiles, end='\n\t')
@@ -46,7 +50,7 @@ def main(**kwargs):
             print('done writing to',dir_name, end='\n\t')
 
         print()
-        if kwargs.get('once',False):
+        if kwargs.get('once',None):
             break
 
 if __name__ == '__main__':
@@ -60,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--interval', type=float, required=False, default=30., help='''
         File update interval [s] (default=%(default)s)
         ''')
-    parser.add_argument('--once', action='store_true', required=False, help='''
+    parser.add_argument('--once', type=str, required=False, help='''
         Run once and then exit, otherwise continously monitor for new data
         ''')
     parser.add_argument('--flush_interval', type=float, required=False, default=1800., help='''
