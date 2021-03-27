@@ -7,14 +7,25 @@ of a live data directory.
 
 To install::
 
-    pip install .
+    pip install -e .
 
 ## Usage
 
-To use::
+To use as continuous data quality monitor::
 
-    run_monitor.py -i <data directory to monitor> -o <directory to place plots> \
+    run_monitor.py \
+        -i <data directory to monitor> \
+        -o <directory to place plots> \
         --interval <time between checking for data updates> \
+        --flush_interval <max time to keep temporary data> \
+        --ext <file extension for plots> \
+        --plots <set of custom plots to generate>
+
+To manually force generation of plots on a specific file::
+
+    run_monitor.py \
+        --once <file to process> \
+        -o <directory to place plots> \
         --ext <file extension for plots> \
         --plots <set of custom plots to generate>
 
@@ -24,7 +35,7 @@ To add additional data quality plots, create a new file ``<some name>.py``
 within the ``monitor/plotting_functions`` directory. Within this file, create
 a class with the desired plot name as the class name. Then implement the
 ``__call__`` method to accept as arguments ``self``, ``filename``,
-``packet_collection``, and ``prev_fig=None``. These are
+``fh``, and ``fig=None``. These are
  - ``self``: your custom plotting class instance
  - ``filename``: the filename of the file that is being plotted
  - ``fh``: an ``h5py`` temporary file object containing *new* packets to plot
@@ -48,6 +59,7 @@ instance. For example, to add points to a line plot::
 If a previous figure does not exist, it is up to your implementation of ``__call__``
 to generate a new figure.
 
+## Template plotting class
 
 To get you started, here's an example bare-bones template::
 
@@ -56,6 +68,7 @@ To get you started, here's an example bare-bones template::
 
     class TemplatePlot(object):
         def __call__(self, filename, fh, fig=None):
+            # pre-process data in fh
             if fig is not None:
                 # do stuff to update plot
                 pass
