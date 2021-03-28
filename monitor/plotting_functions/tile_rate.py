@@ -56,7 +56,7 @@ class TileRate(object):
                         , axis=0))
                     ax1_lines[i_tile%(len(self.tile_numbers)//2)].set_ydata(np.append(
                         ax1_lines[i_tile%(len(self.tile_numbers)//2)].get_ydata(),
-                        tile_packet_count[i_tile + len(self.tile_numbers)//2]
+                        tile_packet_count[i_tile]
                         , axis=0))
 
                 # ax1_lines[i_tile*3].set_xdata(np.append(
