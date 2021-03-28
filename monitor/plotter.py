@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 import os
+import matplotlib.pyplot as plt
 
 from . import plotting_functions
 
