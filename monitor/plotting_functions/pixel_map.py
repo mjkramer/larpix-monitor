@@ -3,6 +3,7 @@ import numpy as np
 import datetime
 import os
 import yaml
+import collections
 
 import matplotlib.colors as colors
 import matplotlib as mpl
@@ -26,59 +27,70 @@ def pixel_map_factory(tpc_number, tile_number):
         tpc_number = 1
         tile_number = 1
 
+        integration_constant = 0.1
+
+        def __init__(self):
+            self.data = collections.defaultdict(dict)
+
+        def update_data(self, array_name, unique_id, new_data):
+            if unique_id in self.data and array_name in self.data[unique_id]:
+                self.data[unique_id][array_name] = new_data * self.integration_constant + self.data[unique_id][array_name] * (1 - self.integration_constant)
+            else:
+                self.data[unique_id][array_name] = new_data
+
         def __call__(self, filename, fh, fig=None):
+            # always regerate figure
+            if fig is not None:
+                plt.figure(fig.number)
+                plt.close()
+
             global pixel_xy
             tpc_mask = fh['packets']['io_group'] == self.tpc_number
             unixtime = fh['packets'][tpc_mask]['timestamp'][ fh['packets'][tpc_mask]['packet_type'] == 4 ]
             if len(unixtime) == 0:
-                return fig if fig is not None else plt.figure()
+                return plt.figure()
             livetime = np.clip(max(unixtime) - min(unixtime), 1, np.inf)
 
             io_channels = np.arange(self.tile_number*4, self.tile_number*4+4)
             tile_mask = tpc_mask & np.isin(fh['packets']['io_channel'], io_channels)
             if not np.any(tile_mask):
-                return fig if fig is not None else plt.figure()
+                return plt.figure()
 
             data_mask = fh['packets'][tile_mask]['packet_type'] == 0
             dataword = fh['packets'][tile_mask][data_mask]['dataword']
             chip_id = fh['packets'][tile_mask][data_mask]['chip_id']
             channel_id = fh['packets'][tile_mask][data_mask]['channel_id']
             unique_ids = unique_channel_id(chip_id.astype(int), channel_id.astype(int))
-            unique_id_set = np.unique(unique_ids)
+            unique_id_set = set(list(np.unique(unique_ids)) + list(self.data.keys()))
 
-            data = dict()
             for unique_id in unique_id_set:
                 mask = unique_ids == unique_id
-                masked_dataword = dataword[mask]
+                n_hits = np.count_nonzero(mask)
+                self.update_data('rate', unique_id, n_hits / livetime)
+                if n_hits:
+                    masked_dataword = dataword[mask]
+                    self.update_data('x', unique_id, pixel_xy.get(unique_id,(0,0))[0])
+                    self.update_data('y', unique_id, pixel_xy.get(unique_id,(0,0))[1])
+                    self.update_data('mean', unique_id, np.mean(masked_dataword))
+                    if n_hits > 3:
+                        self.update_data('std', unique_id, np.std(masked_dataword))
 
-                data[unique_id] = dict()
-                data[unique_id]['mean'] = np.clip(np.mean(masked_dataword),0,256)
-                data[unique_id]['std'] = np.clip(np.std(masked_dataword),0,256)
-                data[unique_id]['count'] = np.clip(np.sum(mask),0,np.inf)
-                data[unique_id]['x'], data[unique_id]['y'] = pixel_xy.get(unique_id,(0,0))
-
-            x = np.array([data[_id]['x'] for _id in unique_id_set])
-            y = np.array([data[_id]['y'] for _id in unique_id_set])
-            mean = np.array([data[_id]['mean'] for _id in unique_id_set])
-            std = np.array([data[_id]['std'] for _id in unique_id_set])
-            count = np.array([data[_id]['count'] for _id in unique_id_set])
-            mask = (~np.isnan(mean)) | (~np.isnan(std)) | (~np.isnan(count))
-            mask = mask & (std != 0) & (count != 0)
+            x = np.array([self.data[_id].get('x', np.nan) for _id in unique_id_set])
+            y = np.array([self.data[_id].get('y', np.nan) for _id in unique_id_set])
+            mean = np.array([self.data[_id].get('mean', np.nan) for _id in unique_id_set])
+            std = np.array([self.data[_id].get('std', np.nan) for _id in unique_id_set])
+            rate = np.array([self.data[_id].get('rate', np.nan) for _id in unique_id_set])
+            mask = (~np.isnan(mean)) | (~np.isnan(std)) | (~np.isnan(rate))
+            mask = mask & (std != 0) & (rate != 0)
             if not np.any(mask):
-                return fig if fig is not None else plt.figure()
+                return plt.figure()
 
-            x = x[mask]
-            y = y[mask]
-            mean = mean[mask]
-            std = std[mask]
-            count = count[mask]
 
-            # always create a new plot
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',sharey='all',figsize=(6,12))
 
-            c0 = fig.colorbar(axes[0].scatter(x, y, c=mean, marker='.'), ax=axes[0])
-            c1 = fig.colorbar(axes[1].scatter(x, y, c=std, marker='.', norm=colors.LogNorm()), ax=axes[1])
-            c2 = fig.colorbar(axes[2].scatter(x, y, c=count/livetime, marker='.', norm=colors.LogNorm()), ax=axes[2])
+            c0 = fig.colorbar(axes[0].scatter(x[mask], y[mask], c=mean[mask], marker='.'), ax=axes[0])
+            c1 = fig.colorbar(axes[1].scatter(x[mask], y[mask], c=std[mask], marker='.', norm=colors.LogNorm()), ax=axes[1])
+            c2 = fig.colorbar(axes[2].scatter(x[mask], y[mask], c=rate[mask], marker='.', norm=colors.LogNorm()), ax=axes[2])
 
             axes[0].set_ylabel('y [mm]')
             axes[1].set_ylabel('y [mm]')
