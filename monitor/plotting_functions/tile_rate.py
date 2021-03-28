@@ -17,7 +17,12 @@ class TileRate(object):
         if timestamp_idcs[0] != 0:
             message_groups[0][0] = message_groups[1][0]
         unixtime = np.concatenate([np.full(len(grp), grp[0]) for grp in message_groups if len(grp)], axis=0)
-        unixtimes = np.arange(min(unixtime), max(unixtime) + 1)
+        start = min(unixtime)+1
+        end = max(unixtime)
+        if start >= end: # not more than 1 full second of data
+            start = min(unixtime)
+            end = max(unixtime)+1
+        unixtimes = np.arange(start, end)
 
         tile_mask = [np.isin(fh['packets']['io_channel'].astype(int) + fh['packets']['io_group'].astype(int)*100, self.io_channels[i_tile]) for i_tile in range(len(self.tile_numbers))]
         data_mask = fh['packets']['packet_type'] == 0 # data packets
@@ -43,20 +48,20 @@ class TileRate(object):
                 if i_tile < len(self.tile_numbers)//2:
                     ax0_lines[i_tile].set_xdata(np.append(
                         ax0_lines[i_tile].get_xdata(),
-                        unixtimes[:-1]
+                        unixtimes[:-2]
                         , axis=0))
                     ax0_lines[i_tile].set_ydata(np.append(
                         ax0_lines[i_tile].get_ydata(),
-                        tile_packet_count[i_tile]
+                        tile_packet_count[i_tile][:-1]
                         , axis=0))
                 else:
                     ax1_lines[i_tile%(len(self.tile_numbers)//2)].set_xdata(np.append(
                         ax1_lines[i_tile%(len(self.tile_numbers)//2)].get_xdata(),
-                        unixtimes[:-1]
+                        unixtimes[:-2]
                         , axis=0))
                     ax1_lines[i_tile%(len(self.tile_numbers)//2)].set_ydata(np.append(
                         ax1_lines[i_tile%(len(self.tile_numbers)//2)].get_ydata(),
-                        tile_packet_count[i_tile]
+                        tile_packet_count[i_tile][:-1]
                         , axis=0))
 
                 # ax1_lines[i_tile*3].set_xdata(np.append(
@@ -95,11 +100,11 @@ class TileRate(object):
             for i_tile in range(len(self.tile_numbers)):
                 color = 'C{}'.format(i_tile%(len(self.tile_numbers)//2))
                 if i_tile < len(self.tile_numbers)//2:
-                    axes[0].plot(unixtimes[:-1], tile_packet_count[i_tile], '.-',
+                    axes[0].plot(unixtimes[:-2], tile_packet_count[i_tile][:-1], '.-',
                         alpha=0.5, label='tile {}'.format(self.tile_numbers[i_tile]),
                         color=color)
                 else:
-                    axes[1].plot(unixtimes[:-1], tile_packet_count[i_tile], '.-',
+                    axes[1].plot(unixtimes[:-2], tile_packet_count[i_tile][:-1], '.-',
                         alpha=0.5, label='tile {}'.format(self.tile_numbers[i_tile]),
                         color=color)
 

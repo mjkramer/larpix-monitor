@@ -26,7 +26,12 @@ class FIFOFlags(object):
         if timestamp_idcs[0] != 0:
             message_groups[0][0] = message_groups[1][0]
         unixtime = np.array([grp[0] for grp in message_groups for _ in range(0,len(grp))])
-        unixtimes = np.arange(min(unixtime),max(unixtime)+1)
+        start = min(unixtime)+1
+        end = max(unixtime)
+        if start >= end: # not more than 1 full second of data
+            start = min(unixtime)
+            end = max(unixtime)+1
+        unixtimes = np.arange(start, end)
 
         packet_type_mask = [fh['packets']['packet_type'] == packet_type for packet_type in range(8)]
         shared_fifo_mask = [fh['packets'][packet_type_mask[0]]['shared_fifo'] == full for full in range(3)]
@@ -47,36 +52,36 @@ class FIFOFlags(object):
             for full in range(0,3):
                 ax0_lines[full*2].set_xdata(np.append(
                     ax0_lines[full*2].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     ,axis=0))
                 ax0_lines[full*2].set_ydata(np.append(
                     ax0_lines[full*2].get_ydata(),
-                    local_fifo_count[full]
+                    local_fifo_count[full][:-1]
                     ,axis=0))
                 ax0_lines[full*2+1].set_xdata(np.append(
                     ax0_lines[full*2+1].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     ,axis=0))
                 ax0_lines[full*2+1].set_ydata(np.append(
                     ax0_lines[full*2+1].get_ydata(),
-                    shared_fifo_count[full]
+                    shared_fifo_count[full][:-1]
                     ,axis=0))
 
                 ax1_lines[full*2].set_xdata(np.append(
                     ax1_lines[full*2].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     ,axis=0))
                 ax1_lines[full*2].set_ydata(np.append(
                     ax1_lines[full*2].get_ydata(),
-                    local_fifo_count[full] / packet_count
+                    (local_fifo_count[full] / packet_count)[:-1]
                     ,axis=0))
                 ax1_lines[full*2+1].set_xdata(np.append(
                     ax1_lines[full*2+1].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     ,axis=0))
                 ax1_lines[full*2+1].set_ydata(np.append(
                     ax1_lines[full*2+1].get_ydata(),
-                    shared_fifo_count[full] / packet_count
+                    (shared_fifo_count[full] / packet_count)[:-1]
                     ,axis=0))
 
             for ax in axes:
@@ -88,14 +93,14 @@ class FIFOFlags(object):
             fig,axes = plt.subplots(2,1,dpi=100,sharex='all',figsize=(10,8))
 
             for full in range(3):
-                axes[0].plot(unixtimes[:-1], shared_fifo_count[full], '.-',
+                axes[0].plot(unixtimes[:-2], shared_fifo_count[full][:-1], '.-',
                     alpha=0.5, label=self.shared_fifo_labels[full], color=self.fifo_colors[full])
-                axes[0].plot(unixtimes[:-1], local_fifo_count[full], '.--',
+                axes[0].plot(unixtimes[:-2], local_fifo_count[full][:-1], '.--',
                     alpha=0.5, label=self.local_fifo_labels[full], color=self.fifo_colors[full])
 
-                axes[1].plot(unixtimes[:-1], shared_fifo_count[full] / packet_count, '.-',
+                axes[1].plot(unixtimes[:-2], (shared_fifo_count[full] / packet_count)[:-1], '.-',
                     alpha=0.5, label=self.shared_fifo_labels[full], color=self.fifo_colors[full])
-                axes[1].plot(unixtimes[:-1], local_fifo_count[full] / packet_count, '.--',
+                axes[1].plot(unixtimes[:-2], (local_fifo_count[full] / packet_count)[:-1], '.--',
                     alpha=0.5, label=self.local_fifo_labels[full], color=self.fifo_colors[full])
 
             axes[0].set_ylabel('rate [Hz]')

@@ -80,7 +80,7 @@ def pixel_map_factory(tpc_number, tile_number):
             mean = np.array([self.data[_id].get('mean', np.nan) for _id in unique_id_set])
             std = np.array([self.data[_id].get('std', np.nan) for _id in unique_id_set])
             rate = np.array([self.data[_id].get('rate', np.nan) for _id in unique_id_set])
-            mask = (~np.isnan(mean)) | (~np.isnan(std)) | (~np.isnan(rate))
+            mask = (np.isfinite(mean)) & (np.isfinite(std)) & (np.isfinite(rate))
             mask = mask & (std != 0) & (rate != 0)
             if not np.any(mask):
                 return plt.figure()

@@ -21,7 +21,12 @@ class PacketRate(object):
         if timestamp_idcs[0] != 0:
             message_groups[0][0] = message_groups[1][0]
         unixtime = np.concatenate([np.full(len(grp), grp[0]) for grp in message_groups if len(grp)], axis=0)
-        unixtimes = np.arange(min(unixtime), max(unixtime) + 1)
+        start = min(unixtime)+1
+        end = max(unixtime)
+        if start >= end: # not more than 1 full second of data
+            start = min(unixtime)
+            end = max(unixtime)+1
+        unixtimes = np.arange(start, end)
 
         packet_type_mask = [fh['packets']['packet_type'] == packet_type for packet_type in range(8)]
         larpix_packet_mask = packet_type_mask[0] | packet_type_mask[1] | packet_type_mask[2] | packet_type_mask[3]
@@ -44,38 +49,38 @@ class PacketRate(object):
 
             ax0_lines[0].set_xdata(np.append(
                 ax0_lines[0].get_xdata(),
-                unixtimes[:-1]
+                unixtimes[:-2]
                 , axis=0))
             ax0_lines[0].set_ydata(np.append(
                 ax0_lines[0].get_ydata(),
-                packet_count
+                packet_count[:-1]
                 , axis=0))
             for packet_type in range(1,9):
                 ax0_lines[packet_type].set_xdata(np.append(
                     ax0_lines[packet_type].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     , axis=0))
                 ax0_lines[packet_type].set_ydata(np.append(
                     ax0_lines[packet_type].get_ydata(),
-                    packet_type_count[packet_type-1]
+                    packet_type_count[packet_type-1][:-1]
                     , axis=0))
 
                 ax1_lines[packet_type-1].set_xdata(np.append(
                     ax1_lines[packet_type-1].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     , axis=0))
                 ax1_lines[packet_type-1].set_ydata(np.append(
                     ax1_lines[packet_type-1].get_ydata(),
-                    packet_type_count[packet_type-1] / np.clip(packet_count, 1, np.inf)
+                    (packet_type_count[packet_type-1] / np.clip(packet_count, 1, np.inf))[:-1]
                     , axis=0))
 
             ax2_lines[0].set_xdata(np.append(
                     ax2_lines[0].get_xdata(),
-                    unixtimes[:-1]
+                    unixtimes[:-2]
                     , axis=0))
             ax2_lines[0].set_ydata(np.append(
                 ax2_lines[0].get_ydata(),
-                parity_error_count / np.clip(larpix_packet_count, 1, np.inf)
+                (parity_error_count / np.clip(larpix_packet_count, 1, np.inf))[:-1]
                 , axis=0))
 
             for ax in axes:
@@ -86,16 +91,16 @@ class PacketRate(object):
             # do stuff to make new plot
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',figsize=(10,12))
 
-            axes[0].plot(unixtimes[:-1], packet_count, '.-',
+            axes[0].plot(unixtimes[:-2], packet_count[:-1], '.-',
                 alpha=0.5, label='total', color='k', zorder=np.inf)
             for packet_type in range(8):
-                axes[0].plot(unixtimes[:-1], packet_type_count[packet_type], '.-',
+                axes[0].plot(unixtimes[:-2], packet_type_count[packet_type][:-1], '.-',
                     alpha=0.5, label=self.packet_type_labels[packet_type])
 
-                axes[1].plot(unixtimes[:-1], packet_type_count[packet_type] / np.clip(packet_count, 1, np.inf), '.-',
+                axes[1].plot(unixtimes[:-2], (packet_type_count[packet_type] / np.clip(packet_count, 1, np.inf))[:-1], '.-',
                     alpha=0.5, label=self.packet_type_labels[packet_type])
 
-            axes[2].plot(unixtimes[:-1], parity_error_count / np.clip(larpix_packet_count, 1, np.inf), '.-',
+            axes[2].plot(unixtimes[:-2], (parity_error_count / np.clip(larpix_packet_count, 1, np.inf))[:-1], '.-',
                     alpha=0.5, label='parity errors')
 
             axes[0].set_ylabel('rate [Hz]')
