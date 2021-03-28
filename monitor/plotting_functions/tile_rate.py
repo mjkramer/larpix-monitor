@@ -26,9 +26,9 @@ class TileRate(object):
         parity_error_mask = fh['packets'][data_mask]['valid_parity'] == 0
 
         tile_packet_count = [np.histogram(unixtime[tile_mask[i_tile] & data_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
-        tile_shared_fifo_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & shared_fifo_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
-        tile_local_fifo_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & local_fifo_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
-        tile_parity_error_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & parity_error_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
+        # tile_shared_fifo_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & shared_fifo_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
+        # tile_local_fifo_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & local_fifo_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
+        # tile_parity_error_count = [np.histogram(unixtime[data_mask][tile_mask[i_tile][data_mask] & parity_error_mask], bins=unixtimes)[0] for i_tile in range(len(self.tile_numbers))]
 
         unixtimes = [datetime.datetime.fromtimestamp(ts) for ts in unixtimes]
 
@@ -40,39 +40,49 @@ class TileRate(object):
             ax1_lines = axes[1].get_lines()
 
             for i_tile in range(len(self.tile_numbers)):
-                ax0_lines[i_tile].set_xdata(np.append(
-                    ax0_lines[i_tile].get_xdata(),
-                    unixtimes[:-1]
-                    , axis=0))
-                ax0_lines[i_tile].set_ydata(np.append(
-                    ax0_lines[i_tile].get_ydata(),
-                    tile_packet_count[i_tile]
-                    , axis=0))
+                if i_tile < len(self.tile_numbers)//2:
+                    ax0_lines[i_tile].set_xdata(np.append(
+                        ax0_lines[i_tile].get_xdata(),
+                        unixtimes[:-1]
+                        , axis=0))
+                    ax0_lines[i_tile].set_ydata(np.append(
+                        ax0_lines[i_tile].get_ydata(),
+                        tile_packet_count[i_tile]
+                        , axis=0))
+                else:
+                    ax1_lines[i_tile%(len(self.tile_numbers)//2)].set_xdata(np.append(
+                        ax1_lines[i_tile%(len(self.tile_numbers)//2)].get_xdata(),
+                        unixtimes[:-1]
+                        , axis=0))
+                    ax1_lines[i_tile%(len(self.tile_numbers)//2)].set_ydata(np.append(
+                        ax1_lines[i_tile%(len(self.tile_numbers)//2)].get_ydata(),
+                        tile_packet_count[i_tile + len(self.tile_numbers)//2]
+                        , axis=0))
 
-                ax1_lines[i_tile*3].set_xdata(np.append(
-                    ax1_lines[i_tile*3].get_xdata(),
-                    unixtimes[:-1]
-                    , axis=0))
-                ax1_lines[i_tile*3].set_ydata(np.append(
-                    ax1_lines[i_tile*3].get_ydata(),
-                    tile_shared_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
-                    , axis=0))
-                ax1_lines[i_tile*3+1].set_xdata(np.append(
-                    ax1_lines[i_tile*3+1].get_xdata(),
-                    unixtimes[:-1]
-                    , axis=0))
-                ax1_lines[i_tile*3+1].set_ydata(np.append(
-                    ax1_lines[i_tile*3+1].get_ydata(),
-                    tile_local_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
-                    , axis=0))
-                ax1_lines[i_tile*3+2].set_xdata(np.append(
-                    ax1_lines[i_tile*3+2].get_xdata(),
-                    unixtimes[:-1]
-                    , axis=0))
-                ax1_lines[i_tile*3+2].set_ydata(np.append(
-                    ax1_lines[i_tile*3+2].get_ydata(),
-                    tile_parity_error_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
-                    , axis=0))
+                # ax1_lines[i_tile*3].set_xdata(np.append(
+                #     ax1_lines[i_tile*3].get_xdata(),
+                #     unixtimes[:-1]
+                #     , axis=0))
+                # ax1_lines[i_tile*3].set_ydata(np.append(
+                #     ax1_lines[i_tile*3].get_ydata(),
+                #     tile_shared_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
+                #     , axis=0))
+                # ax1_lines[i_tile*3+1].set_xdata(np.append(
+                #     ax1_lines[i_tile*3+1].get_xdata(),
+                #     unixtimes[:-1]
+                #     , axis=0))
+                # ax1_lines[i_tile*3+1].set_ydata(np.append(
+                #     ax1_lines[i_tile*3+1].get_ydata(),
+                #     tile_local_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
+                #     , axis=0))
+                # ax1_lines[i_tile*3+2].set_xdata(np.append(
+                #     ax1_lines[i_tile*3+2].get_xdata(),
+                #     unixtimes[:-1]
+                #     , axis=0))
+                # ax1_lines[i_tile*3+2].set_ydata(np.append(
+                #     ax1_lines[i_tile*3+2].get_ydata(),
+                #     tile_parity_error_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf)
+                #     , axis=0))
 
             for ax in axes:
                 ax.relim()
@@ -83,24 +93,32 @@ class TileRate(object):
             fig,axes = plt.subplots(2,1,dpi=100,sharex='all',figsize=(10,8))
 
             for i_tile in range(len(self.tile_numbers)):
-                axes[0].plot(unixtimes[:-1], tile_packet_count[i_tile], '.-',
-                    alpha=0.5, label='tile {}'.format(self.tile_numbers[i_tile]),
-                    color=self.tile_colors(i_tile/len(self.tile_numbers)))
+                color = 'C{}'.format(i_tile%(len(self.tile_numbers)//2))
+                if i_tile < len(self.tile_numbers)//2:
+                    axes[0].plot(unixtimes[:-1], tile_packet_count[i_tile], '.-',
+                        alpha=0.5, label='tile {}'.format(self.tile_numbers[i_tile]),
+                        color=color)
+                else:
+                    axes[1].plot(unixtimes[:-1], tile_packet_count[i_tile], '.-',
+                        alpha=0.5, label='tile {}'.format(self.tile_numbers[i_tile]),
+                        color=color)
 
-                axes[1].plot(unixtimes[:-1], tile_shared_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.-',
-                    alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
-                axes[1].plot(unixtimes[:-1], tile_local_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.--',
-                    alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
-                axes[1].plot(unixtimes[:-1], tile_parity_error_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.-.',
-                    alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
+                # axes[1].plot(unixtimes[:-1], tile_shared_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.-',
+                #     alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
+                # axes[1].plot(unixtimes[:-1], tile_local_fifo_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.--',
+                #     alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
+                # axes[1].plot(unixtimes[:-1], tile_parity_error_count[i_tile] / np.clip(tile_packet_count[i_tile],1,np.inf), '.-.',
+                #     alpha=0.5, color=self.tile_colors(i_tile/len(self.tile_numbers)))
 
             axes[0].set_ylabel('trigger rate [Hz]')
             axes[0].set_yscale('log')
             axes[0].legend()
             axes[0].grid()
-            axes[1].set_ylabel('fraction')
+            # axes[1].set_ylabel('fraction')
+            axes[1].set_ylabel('trigger rate [Hz]')
             axes[1].set_yscale('log')
-            axes[1].legend(['shared fifo >50%','local fifo >50%','parity errors'])
+            axes[1].legend()
+            # axes[1].legend(['shared fifo >50%','local fifo >50%','parity errors'])
             axes[1].grid()
 
             fig.tight_layout()

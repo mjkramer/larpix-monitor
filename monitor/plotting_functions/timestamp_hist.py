@@ -14,7 +14,7 @@ class TimestampHistograms(object):
     sync_bins = np.linspace(-sync_plot_range, sync_plot_range, 2*sync_plot_range)
 
     uart_word_len = (64+2)*4 # 64 data + start + stop
-    delay_plot_range = uart_word_len * 100 # max 100 chip depth
+    delay_plot_range = uart_word_len * 100 * 2 # max 100 chip depth x 2
     delay_bins = np.linspace(0,delay_plot_range,int(2*delay_plot_range/uart_word_len))
     readout_sync_bins = np.linspace(0,uart_word_len,uart_word_len)
 
