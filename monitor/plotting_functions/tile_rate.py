@@ -6,7 +6,7 @@ import matplotlib.colors as colors
 
 class TileRate(object):
     tile_numbers = ['{}-{}'.format(tpc, tile) for tpc in range(1,3) for tile in range(1,9)]
-    io_channels = [np.arange(tile*4,tile*4+4) + tpc*100 for tpc in range(1,3) for tile in range(1,9)]
+    io_channels = [np.arange((tile-1)*4+1,(tile-1)*4+4+1) + tpc*100 for tpc in range(1,3) for tile in range(1,9)]
 
     tile_colors = plt.get_cmap('hsv')
 

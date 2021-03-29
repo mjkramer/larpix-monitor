@@ -51,7 +51,7 @@ def pixel_map_factory(tpc_number, tile_number):
                 return plt.figure()
             livetime = np.clip(max(unixtime) - min(unixtime), 1, np.inf)
 
-            io_channels = np.arange(self.tile_number*4, self.tile_number*4+4)
+            io_channels = np.arange((self.tile_number-1)*4+1, (self.tile_number-1)*4+4+1)
             tile_mask = tpc_mask & np.isin(fh['packets']['io_channel'], io_channels)
             if not np.any(tile_mask):
                 return plt.figure()
