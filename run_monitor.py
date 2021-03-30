@@ -18,6 +18,7 @@ def main(**kwargs):
         interval = kwargs.get('interval')
         )
     fp = FileParser(
+        temp_dir = kwargs.get('temp_directory','./'),
         sampling = not kwargs.get('sampling_off'),
         max_msgs = kwargs.get('max_msgs'),
         clean_up_interval = kwargs.get('flush_interval')
@@ -65,6 +66,9 @@ if __name__ == '__main__':
         ''')
     parser.add_argument('-o','--out_directory', type=str, required=False, default='./', help='''
         Directory to save plots (default=%(default)s)
+        ''')
+    parser.add_argument('--temp_directory', type=str, required=False, default='./', help='''
+        Directory to put temp files in (default=%(default)s)
         ''')
     parser.add_argument('--interval', type=float, required=False, default=30., help='''
         File update interval [s] (default=%(default)s)

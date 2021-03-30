@@ -14,10 +14,11 @@ from larpix import PacketCollection
 class FileParser(object):
     max_read = 256000
 
-    def __init__(self, sampling, max_msgs, clean_up_interval):
+    def __init__(self, temp_dir, sampling, max_msgs, clean_up_interval):
         self.sampling = sampling
         self.max_msgs = max_msgs
         self.clean_up_interval = clean_up_interval
+        self.temp_dir = temp_dir
 
         self._curr_index = defaultdict(int)
         self._last_updated = defaultdict(lambda : time.time())
@@ -70,7 +71,7 @@ class FileParser(object):
         return h5py.File(self._temp_filename(filename), 'r')
 
     def _temp_filename(self, filename):
-        return '{}.dqm.h5'.format(os.path.basename(filename[:-3]))
+        return os.path.join(self.temp_dir,'{}.dqm.h5'.format(os.path.basename(filename[:-3])))
 
     def _remove_temp_file(self, filename):
         if os.path.exists(self._temp_filename(filename)):
