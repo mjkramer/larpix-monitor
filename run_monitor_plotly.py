@@ -20,6 +20,7 @@ def main(**kwargs):
         interval = kwargs.get('interval')
         )
     fp = FileParser(
+        temp_dir = kwargs.get('temp_directory','./'),
         sampling = not kwargs.get('sampling_off'),
         max_msgs = kwargs.get('max_msgs'),
         clean_up_interval = kwargs.get('flush_interval')
