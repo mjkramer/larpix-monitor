@@ -8,8 +8,9 @@ from monitor.file_watcher import FileWatcher
 from monitor.file_parser import FileParser
 from monitor.plotter import Plotter
 from monitor.plotting_functions import available_plots
+from collections import defaultdict 
 
-available_plots_matplotlib = [plot for plot in available_plots if 'Plotly' not in plot]
+available_plots_plotly = [plot for plot in available_plots if 'Plotly' in plot]
 
 def main(**kwargs):
 
@@ -26,7 +27,9 @@ def main(**kwargs):
         plots = kwargs.get('plots'),
         clean_up_interval = kwargs.get('flush_interval')
         )
-
+    
+    figures = defaultdict(lambda: None)
+    
     while True:
         print(datetime.datetime.now(), end='\r')
 
@@ -41,18 +44,24 @@ def main(**kwargs):
         datafile_fh = fp(datafiles)
         print('\tgot',sum(map(lambda fh: len(fh['packets']),datafile_fh)),'packets')
 
-        datafile_figs = p(zip(datafiles, datafile_fh))
-        print('\tgenerated',sum(map(len,datafile_figs)),'plots')
+        for d, d_fh in zip(datafiles, datafile_fh):
+            if len(d_fh['packets']) == 0: continue
+            for plot in p._plotters:
+                figures[plot] = p._plotters[plot](d, d_fh, figures[plot])          
 
-        for filename,figs in zip(datafiles,datafile_figs):
-            dir_name = os.path.join(kwargs.get('out_directory'), os.path.basename(filename[:-3]) + '_dqm')
-            for fig_name, fig in figs.items():
-                os.makedirs(dir_name, exist_ok=True)
-                fig.savefig(os.path.join(
-                    dir_name, fig_name + kwargs.get('ext')
-                    ))
-            print('\tdone writing to',dir_name)
+        index_filename = "/global/project/projectdirs/dune/www/data/Module0/DQM/plotly_test/index.html"
+        index_file = open(index_filename, "w")
+        index_file.write("<html><head><title>Module 0 data quality monitor</title><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head><body>")
 
+        index_file.write("<h1>Module0 Data Quality Monitor</h1>")
+        index_file.write('<p><em><script>document.write("This document was lastly modified on" + " " +document.lastModified);</script></em></p>')
+        for f in figures:
+            index_file.write("<h2>%s</h2>" % f.rstrip("Plotly"))
+            index_file.write(plotly.offline.plot(figures[f], include_plotlyjs=False, output_type='div'))
+
+        index_file.write("</body></html>")
+        index_file.close()
+        os.chmod(index_filename, 0o755)
         fp.clean_up_temp_files(datafiles)
 
         if kwargs.get('once',None):
@@ -84,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--ext', type=str, required=False, default='.png', help='''
         File extension to save plots as (default=%(default)s)
         ''')
-    parser.add_argument('--plots', nargs='+', type=str, required=False, default=available_plots_matplotlib, help='''
+    parser.add_argument('--plots', nargs='+', type=str, required=False, default=available_plots_plotly, help='''
         Plot names to generate (default=%(default)s)
         ''')
     args = parser.parse_args()
