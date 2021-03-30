@@ -82,5 +82,6 @@ class FileParser(object):
                 to_clean.append(filename)
         for filename in to_clean:
             del self._last_updated[filename]
-            del self._curr_index[filename]
+            if filename in self._curr_index:
+                del self._curr_index[filename]
 
