@@ -4,6 +4,7 @@ from collections import defaultdict
 import os
 import h5py
 import numpy as np
+from tqdm.autonotebook import tqdm
 
 import larpix.format.rawhdf5format as rh5
 import larpix.format.hdf5format as h5
@@ -23,7 +24,7 @@ class FileParser(object):
 
     def __call__(self, datafiles):
         datafile_fh = list()
-        for file in datafiles:
+        for file in tqdm(datafiles, desc='Loading file...'):
             try:
                 datafile_fh.append(self._load_raw_hdf5(file))
             except Exception as e:
