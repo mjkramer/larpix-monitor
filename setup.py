@@ -8,10 +8,12 @@ setup(name='larpix-monitor',
       author='Peter Madigan',
       author_email='pmadigan@berkeley.edu',
       packages=['monitor'],
-      scripts=['run_monitor.py'],
+      scripts=['run_monitor.py', 'run_monitor_plotly.py'],
       requires=[
         'numpy',
         'matplotlib',
+        'plotly',
+        'tqdm',
         'larpix_control'
       ]
      )

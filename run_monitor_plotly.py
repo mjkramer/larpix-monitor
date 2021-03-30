@@ -9,6 +9,7 @@ from monitor.file_parser import FileParser
 from monitor.plotter import Plotter
 from monitor.plotting_functions import available_plots
 from collections import defaultdict 
+import plotly
 
 available_plots_plotly = [plot for plot in available_plots if 'Plotly' in plot]
 
@@ -49,7 +50,7 @@ def main(**kwargs):
             for plot in p._plotters:
                 figures[plot] = p._plotters[plot](d, d_fh, figures[plot])          
 
-        index_filename = "/global/project/projectdirs/dune/www/data/Module0/DQM/plotly_test/index.html"
+        index_filename = kwargs.get('out_directory')+"/index.html"
         index_file = open(index_filename, "w")
         index_file.write("<html><head><title>Module 0 data quality monitor</title><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head><body>")
 
