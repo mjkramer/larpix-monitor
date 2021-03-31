@@ -115,6 +115,9 @@ class FIFOFlagsPlotly(object):
                                 arrayminus=[mean_local_ratio_fifo_count-min_local_ratio_fifo_count]),
                             name=self.local_fifo_labels[full], showlegend=False,
                             row=2,col=1,line=dict(width=2, dash='dash', color=self.fifo_colors[full]))
+            
+            fig.update_xaxes(range=[mean_time-datetime.timedelta(hours=25),
+                                    mean_time+datetime.timedelta(hours=1)])
 
             fig.update_layout(height=600,width=900,margin=dict(t=20))
             fig.update_yaxes(type="log") 

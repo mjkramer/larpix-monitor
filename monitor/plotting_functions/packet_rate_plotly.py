@@ -51,16 +51,18 @@ class PacketRatePlotly(object):
             # do stuff to make new plot
             fig = go.Figure()
             fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-        
-        if len(unixtimes[:-2]):
-            mean_time = unixtimes[:-2][len(unixtimes[:-2])//2]
-            fig.add_scatter(x=[mean_time], y=[np.mean(packet_count[:-1])], mode='lines+markers',
-                            error_y=dict(
-                                type='data',
-                                symmetric=False,
-                                array=[np.max(packet_count[:-1])-np.mean(packet_count[:-1])],
-                                arrayminus=[np.mean(packet_count[:-1])-np.min(packet_count[:-1])]),
-                            name='total', line=dict(width=2, color='black'), row=1, col=1, showlegend=self.n_files==0)
+            
+        if not len(unixtimes[:-2]):
+            return fig
+
+        mean_time = unixtimes[:-2][len(unixtimes[:-2])//2]
+        fig.add_scatter(x=[mean_time], y=[np.mean(packet_count[:-1])], mode='lines+markers',
+                        error_y=dict(
+                            type='data',
+                            symmetric=False,
+                            array=[np.max(packet_count[:-1])-np.mean(packet_count[:-1])],
+                            arrayminus=[np.mean(packet_count[:-1])-np.min(packet_count[:-1])]),
+                        name='total', line=dict(width=2, color='black'), row=1, col=1, showlegend=self.n_files==0)
 
         for packet_type in range(8):
             
@@ -114,7 +116,9 @@ class PacketRatePlotly(object):
                             connectgaps=True,
                             mode='lines+markers', showlegend=self.n_files==0, line=dict(width=2, color='gray'), 
                             name='Parity errors', row=3, col=1)
-
+        
+        fig.update_xaxes(range=[mean_time-datetime.timedelta(hours=25),
+                                mean_time+datetime.timedelta(hours=1)])
         fig.update_yaxes(type="log") 
         fig.update_yaxes(title='Rate [Hz]', row=1,col=1)
         fig.update_yaxes(title='Fraction', row=2,col=1)

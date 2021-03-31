@@ -42,6 +42,9 @@ class TileRatePlotly(object):
             fig = go.Figure()
             fig = make_subplots(rows=2, cols=1, shared_xaxes=True, subplot_titles=("TPC 1", "TPC 2"))
 
+        if not len(unixtimes[:-2]):
+            return fig
+            
         for i_tile in range(len(self.tile_numbers)):
             color = 'C{}'.format(i_tile%(len(self.tile_numbers)//2))
             
@@ -73,6 +76,9 @@ class TileRatePlotly(object):
                                 row=2, col=1, showlegend=self.n_files==0, 
                                 mode='lines+markers',
                                 line=dict(width=2, color=cols[i_tile%(len(self.tile_numbers)//2)]))
+
+        fig.update_xaxes(range=[mean_time-datetime.timedelta(hours=25),
+                                mean_time+datetime.timedelta(hours=1)])
 
         fig.update_layout(height=600,width=900,margin=dict(t=20))
         fig.update_yaxes(type="log") 
