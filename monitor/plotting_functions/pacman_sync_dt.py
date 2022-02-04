@@ -10,6 +10,11 @@ import os
 
 class PacmanSyncHistograms(object):
     def __call__(self, filename, fh, fig=None):
+        if fig is not None:
+            plt.figure(fig.number)
+            plt.close()
+            fig = None
+        
         p = fh['packets']
         
         # Extract sync packets by IO group
@@ -19,8 +24,7 @@ class PacmanSyncHistograms(object):
         syncs = [ (g, p[sync_mask&(groups==g)]) for g in np.unique(groups) ]
         
         # Plot
-        if fig is None:
-            fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(8, 6))
 
         gs = fig.add_gridspec(1, 2,  width_ratios=(2,1), height_ratios=(1,),
                               left=0.1, right=0.9, bottom=0.1, top=0.9,
@@ -30,6 +34,7 @@ class PacmanSyncHistograms(object):
         ax1 = fig.add_subplot(gs[0,0], sharey=ax0)
 
         for group, sync in syncs:
+            if not len(sync): continue
             ts = sync['timestamp'] - 1e7
             mu, std = np.mean(ts), np.std(ts)
             vmin, vmax = np.min(ts) - 1, np.max(ts) + 1

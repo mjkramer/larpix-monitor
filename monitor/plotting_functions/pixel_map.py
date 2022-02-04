@@ -4,6 +4,7 @@ import datetime
 import os
 import yaml
 import collections
+import time
 
 import matplotlib.colors as colors
 import matplotlib as mpl
@@ -29,20 +30,31 @@ def pixel_map_factory(tpc_number, tile_number):
 
         integration_constant = 0.1
 
-        def __init__(self):
-            self.data = collections.defaultdict(dict)
+        _flush_time = 1800
 
-        def update_data(self, array_name, unique_id, new_data):
-            if unique_id in self.data and array_name in self.data[unique_id]:
-                self.data[unique_id][array_name] = new_data * self.integration_constant + self.data[unique_id][array_name] * (1 - self.integration_constant)
+        def __init__(self):
+            self.data = collections.defaultdict(lambda : collections.defaultdict(dict))
+            self.last_update = collections.defaultdict(lambda : time.time())
+
+        def update_data(self, array_name, unique_id, new_data, filename):
+            if array_name in self.data[filename][unique_id]:
+                self.data[filename][unique_id][array_name] = new_data * self.integration_constant + self.data[filename][unique_id][array_name] * (1 - self.integration_constant)
             else:
-                self.data[unique_id][array_name] = new_data
+                self.data[filename][unique_id][array_name] = new_data
+            self.last_update[filename] = time.time()
+
+        def clear_data(self):
+            for filename in list(self.last_update):
+                if filename in self.data and time.time() > self.last_update[filename] + self._flush_time:
+                    del self.data[filename]
+                    del self.last_update[filename]
 
         def __call__(self, filename, fh, fig=None):
             # always regerate figure
             if fig is not None:
                 plt.figure(fig.number)
                 plt.close()
+            self.clear_data()
 
             global pixel_xy
             tpc_mask = fh['packets']['io_group'] == self.tpc_number
@@ -61,30 +73,30 @@ def pixel_map_factory(tpc_number, tile_number):
             chip_id = fh['packets'][tile_mask][data_mask]['chip_id']
             channel_id = fh['packets'][tile_mask][data_mask]['channel_id']
             unique_ids = unique_channel_id(chip_id.astype(int), channel_id.astype(int))
-            unique_id_set = set(list(np.unique(unique_ids)) + list(self.data.keys()))
+            unique_id_set = list(set(list(np.unique(unique_ids)) + list(self.data[filename].keys())))
 
             for unique_id in unique_id_set:
                 mask = unique_ids == unique_id
                 n_hits = np.count_nonzero(mask)
-                self.update_data('rate', unique_id, n_hits / livetime)
+                self.update_data('count', unique_id, n_hits, filename)
+                self.update_data('livetime', unique_id, livetime, filename)
                 if n_hits:
                     masked_dataword = dataword[mask]
-                    self.update_data('x', unique_id, pixel_xy.get(unique_id,(0,0))[0])
-                    self.update_data('y', unique_id, pixel_xy.get(unique_id,(0,0))[1])
-                    self.update_data('mean', unique_id, np.mean(masked_dataword))
+                    self.update_data('x', unique_id, pixel_xy.get(unique_id,(0,0))[0], filename)
+                    self.update_data('y', unique_id, pixel_xy.get(unique_id,(0,0))[1], filename)
+                    self.update_data('mean', unique_id, np.mean(masked_dataword), filename)
                     if n_hits > 3:
-                        self.update_data('std', unique_id, np.std(masked_dataword))
+                        self.update_data('std', unique_id, np.std(masked_dataword), filename)
 
-            x = np.array([self.data[_id].get('x', np.nan) for _id in unique_id_set])
-            y = np.array([self.data[_id].get('y', np.nan) for _id in unique_id_set])
-            mean = np.array([self.data[_id].get('mean', np.nan) for _id in unique_id_set])
-            std = np.array([self.data[_id].get('std', np.nan) for _id in unique_id_set])
-            rate = np.array([self.data[_id].get('rate', np.nan) for _id in unique_id_set])
+            x = np.array([self.data[filename][_id].get('x', np.nan) for _id in unique_id_set])
+            y = np.array([self.data[filename][_id].get('y', np.nan) for _id in unique_id_set])
+            mean = np.array([self.data[filename][_id].get('mean', np.nan) for _id in unique_id_set])
+            std = np.array([self.data[filename][_id].get('std', np.nan) for _id in unique_id_set])
+            rate = np.array([self.data[filename][_id].get('count', np.nan) / self.data[filename][_id].get('livetime',1) for _id in unique_id_set])
             mask = (np.isfinite(mean)) & (np.isfinite(std)) & (np.isfinite(rate))
             mask = mask & (std != 0) & (rate != 0)
             if not np.any(mask):
                 return plt.figure()
-
 
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',sharey='all',figsize=(6,12))
 
