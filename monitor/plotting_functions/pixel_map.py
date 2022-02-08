@@ -60,12 +60,14 @@ def pixel_map_factory(tpc_number, tile_number):
             tpc_mask = fh['packets']['io_group'] == self.tpc_number
             unixtime = fh['packets'][tpc_mask]['timestamp'][ fh['packets'][tpc_mask]['packet_type'] == 4 ]
             if len(unixtime) == 0:
+                print(f'Warning: No calculable livetime for {self.tpc_number}-{self.tile_number}')
                 return plt.figure()
             livetime = np.clip(max(unixtime) - min(unixtime), 1, np.inf)
 
             io_channels = np.arange((self.tile_number-1)*4+1, (self.tile_number-1)*4+4+1)
             tile_mask = tpc_mask & np.isin(fh['packets']['io_channel'], io_channels)
             if not np.any(tile_mask):
+                print(f'Warning: No data from io_group,io_channels for {self.tpc_number}-{self.tile_number}')
                 return plt.figure()
 
             data_mask = fh['packets'][tile_mask]['packet_type'] == 0
@@ -96,6 +98,7 @@ def pixel_map_factory(tpc_number, tile_number):
             mask = (np.isfinite(mean)) & (np.isfinite(std)) & (np.isfinite(rate))
             mask = mask & (std != 0) & (rate != 0)
             if not np.any(mask):
+                print(f'Warning: No valid data for {self.tpc_number}-{self.tile_number}')
                 return plt.figure()
 
             fig,axes = plt.subplots(3,1,dpi=100,sharex='all',sharey='all',figsize=(6,12))
