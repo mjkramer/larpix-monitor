@@ -58,7 +58,7 @@ class FileParser(object):
             pkts = list()
             for io_group,msg in zip(rd['msg_headers']['io_groups'], rd['msgs']):
                 pkts.extend(parse(msg, io_group=io_group))
-            h5.to_file(self._temp_filename(filename), pkts)
+            h5.to_file(self._temp_filename(filename), pkts, workers=2)
 
             self._curr_index[filename] = end
 
