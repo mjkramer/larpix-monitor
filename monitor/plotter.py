@@ -1,7 +1,9 @@
 import time
 from collections import defaultdict
 import os
+import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('agg')
 
 from . import plotting_functions
 
