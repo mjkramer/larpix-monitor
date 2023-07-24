@@ -26,6 +26,9 @@ class FileParser(object):
     def __call__(self, datafiles):
         datafile_fh = list()
         for file in tqdm(datafiles, desc='Loading file...'):
+            if 'packets' in h5py.File(file):
+                datafile_fh.append(file)
+                continue
             try:
                 datafile_fh.append(self._load_raw_hdf5(file))
             except Exception as e:
