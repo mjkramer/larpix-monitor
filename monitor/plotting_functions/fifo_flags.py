@@ -43,6 +43,8 @@ class FIFOFlags(object):
 
         unixtimes = [datetime.datetime.fromtimestamp(ts) for ts in unixtimes]
 
+        packet_count = [pc if not pc == 0 else 1 for pc in packet_count]
+
         if fig is not None:
             # do stuff to update plot
             axes = fig.get_axes()
