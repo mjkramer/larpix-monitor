@@ -27,7 +27,7 @@ class FileParser(object):
         datafile_fh = list()
         for file in tqdm(datafiles, desc='Loading file...'):
             if 'packets' in h5py.File(file):
-                datafile_fh.append(file)
+                datafile_fh.append(h5py.File(file))
                 continue
             try:
                 datafile_fh.append(self._load_raw_hdf5(file))
