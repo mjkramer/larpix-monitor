@@ -28,8 +28,15 @@ class FileParser(object):
     def __call__(self, datafiles):
         datafile_fh = list()
         for file in tqdm(datafiles, desc='Loading file...'):
-            if 'packets' in h5py.File(file):
-                datafile_fh.append(h5py.File(file))
+            # HACK to avoid the "OSError: File is open for writing" BS
+            while True:
+                try:
+                    h5file = h5py.File(file, 'r', swmr=True)
+                    break
+                except OSError:
+                    time.sleep(10)
+            if 'packets' in h5file:
+                datafile_fh.append(h5file)
                 continue
             try:
                 datafile_fh.append(self._load_raw_hdf5(file))
