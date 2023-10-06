@@ -21,7 +21,8 @@ def main(**kwargs):
         temp_dir = kwargs.get('temp_directory','./'),
         sampling = not kwargs.get('sampling_off'),
         max_msgs = kwargs.get('max_msgs'),
-        clean_up_interval = kwargs.get('flush_interval')
+        clean_up_interval = kwargs.get('flush_interval'),
+        use_numba = kwargs.get('numba')
         )
     p  = Plotter(
         plots = kwargs.get('plots'),
