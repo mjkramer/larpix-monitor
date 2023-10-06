@@ -17,8 +17,8 @@ if [[ "$CONDA_DEFAULT_ENV" != "larpix-monitor" ]]; then
       exit 1
 fi
 
-# INDIR="/data/LArPix/ModuleX/commission"
-INDIR="/home/daq/PACMANv1rev3b/ModuleX/crs_daq/"
+INDIR="/data/LArPix/ModuleX/temp"
+# INDIR="/home/daq/PACMANv1rev3b/ModuleX/crs_daq"
 
 # directory to generate plots in
 OUTDIR="/data/LArPix/ModuleX/DQM/commission"
@@ -54,12 +54,12 @@ if [[ "$nprocs" != "0" ]]; then
      fi
 fi
 
-# Keep relaunching if it crashes
-while true; do
-    $DQM -i $INDIR -o $OUTDIR \
-         --interval=10 \
-         --max_msgs=100000 \
-         --temp_directory=$DQMTMPDIR \
-         --numba
-    sleep 30
+for f in $INDIR/*.h5; do
+    # echo $f
+    if [[ ! -d "$OUTDIR/$(basename $f .h5)_dqm" ]]; then
+        $DQM --once $f -o $OUTDIR \
+             --numba --max_msgs=-1 \
+             --temp_directory=$DQMTMPDIR
+    fi
 done
+
